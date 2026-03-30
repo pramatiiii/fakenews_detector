@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Fake News Detector</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  min-height: 100vh;
+  background: #0a0702;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 15% 0%, rgba(200,130,20,0.25) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 40% at 85% 100%, rgba(150,90,10,0.18) 0%, transparent 55%);
+  color: #fff8ee;
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+}
+
+.page {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 0 28px 80px;
+}
+
+header {
+  text-align: center;
+  padding: 72px 0 56px;
+}
+.eyebrow {
+  font-size: 11px;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  color: rgba(210,160,60,0.8);
+  margin-bottom: 20px;
+}
+h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(52px, 9vw, 88px);
+  font-weight: 400;
+  font-style: italic;
+  line-height: 1.05;
+  background: linear-gradient(135deg, #c8921c 0%, #f5dfa0 45%, #c8921c 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 20px;
+}
+.subtitle {
+  font-size: 15px;
+  letter-spacing: 3px;
+  color: rgba(255,248,238,0.7);
+  font-style: italic;
+}
+
+.glass {
+  background: rgba(255,255,255,0.045);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid rgba(210,160,60,0.2);
+  border-radius: 22px;
+}
+
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+  margin-bottom: 22px;
+}
+@media (max-width: 720px) {
+  .main-grid { grid-template-columns: 1fr; }
+}
+
+.input-panel {
+  padding: 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.field-label {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  color: rgba(210,160,60,0.85);
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+
+input[type="text"], textarea {
+  width: 100%;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(210,160,60,0.25);
+  border-radius: 14px;
+  padding: 14px 18px;
+  color: #fff8ee;
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  outline: none;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  resize: none;
+}
+input[type="text"]:focus, textarea:focus {
+  border-color: rgba(210,160,60,0.6);
+  box-shadow: 0 0 0 3px rgba(210,160,60,0.08);
+}
+input::placeholder, textarea::placeholder {
+  color: rgba(255,248,238,0.3);
+  font-style: italic;
+}
+textarea { height: 190px; line-height: 1.7; }
+
+.btn-analyze {
+  width: 100%;
+  padding: 18px;
+  background: linear-gradient(135deg, #c8921c, #a06e10);
+  border: none;
+  border-radius: 14px;
+  color: #fff8ee;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 24px rgba(200,146,28,0.25);
+}
+.btn-analyze:hover {
+  background: linear-gradient(135deg, #daa030, #b87c18);
+  box-shadow: 0 6px 36px rgba(200,146,28,0.4);
+  transform: translateY(-2px);
+}
+.btn-analyze:active { transform: translateY(0); }
+.btn-analyze:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.spinner {
+  display: none;
+  width: 16px; height: 16px;
+  border: 2px solid rgba(255,248,238,0.3);
+  border-top-color: #fff8ee;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  margin: 0 auto;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.result-panel {
+  padding: 36px;
+  min-height: 380px;
+  display: flex;
+  flex-direction: column;
+}
+
+.empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+.empty-icon { font-size: 32px; opacity: 0.2; color: #d2a040; }
+.empty-text {
+  font-size: 11px;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  color: rgba(210,160,60,0.4);
+}
+
+.verdict-badge {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 22px 26px;
+  border-radius: 16px;
+  border: 1px solid;
+  margin-bottom: 24px;
+}
+.verdict-icon { font-size: 30px; }
+.verdict-label {
+  font-size: 10px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  opacity: 0.8;
+}
+.verdict-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 32px;
+  font-style: italic;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.section-label {
+  font-size: 10px;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  color: rgba(210,160,60,0.75);
+  margin-bottom: 10px;
+}
+.score-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 10px;
+}
+.score-number {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px;
+  font-style: italic;
+}
+.bar-track {
+  height: 10px;
+  background: rgba(255,255,255,0.07);
+  border-radius: 100px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+.bar-fill {
+  height: 100%;
+  border-radius: 100px;
+  width: 0%;
+  transition: width 1.2s cubic-bezier(0.4,0,0.2,1);
+}
+.bar-markers {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(210,160,60,0.45);
+  margin-bottom: 20px;
+}
+
+.conf-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.conf-track {
+  flex: 1;
+  height: 5px;
+  background: rgba(255,255,255,0.07);
+  border-radius: 100px;
+  overflow: hidden;
+}
+.conf-fill {
+  height: 100%;
+  border-radius: 100px;
+  width: 0%;
+  transition: width 1.2s cubic-bezier(0.4,0,0.2,1);
+}
+.conf-value {
+  font-size: 14px;
+  color: #fff8ee;
+  min-width: 58px;
+  text-align: right;
+}
+
+.reasons-list { margin-bottom: 20px; }
+.reason-item {
+  display: flex;
+  gap: 14px;
+  padding: 13px 0;
+  border-bottom: 1px solid rgba(210,160,60,0.1);
+  font-size: 15px;
+  line-height: 1.7;
+  color: #fff8ee;
+}
+.reason-item:last-child { border-bottom: none; }
+.reason-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 9px;
+}
+
+.advice-box {
+  padding: 20px 24px;
+  background: rgba(210,160,60,0.07);
+  border: 1px solid rgba(210,160,60,0.22);
+  border-radius: 14px;
+}
+.advice-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 19px;
+  font-style: italic;
+  line-height: 1.7;
+  color: #fff8ee;
+}
+
+.history-panel { padding: 28px 36px; }
+.history-heading {
+  text-align: center;
+  font-size: 10px;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  color: rgba(210,160,60,0.5);
+  margin-bottom: 22px;
+}
+.history-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 14px;
+}
+.history-item {
+  padding: 16px 18px;
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(210,160,60,0.12);
+  border-left-width: 3px;
+  border-radius: 14px;
+}
+.history-time {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: rgba(210,160,60,0.5);
+  margin-bottom: 6px;
+}
+.history-text {
+  font-size: 13px;
+  color: rgba(255,248,238,0.65);
+  font-style: italic;
+  margin-bottom: 8px;
+  line-height: 1.5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.history-verdict {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 1px;
+}
+
+footer {
+  text-align: center;
+  padding: 40px 0 0;
+  font-size: 12px;
+  color: rgba(210,160,60,0.3);
+  letter-spacing: 2px;
+  font-style: italic;
+  line-height: 1.8;
+}
+
+.fade-in { animation: fadeIn 0.5s ease forwards; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.error-msg {
+  color: #ff8080;
+  font-size: 15px;
+  font-style: italic;
+  text-align: center;
+  padding: 20px;
+  line-height: 1.7;
+}
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <header>
+    <p class="eyebrow">Powered by AI &nbsp;·&nbsp; Groq &nbsp;·&nbsp; Llama 3.3</p>
+    <h1>Fake News<br/>Detector</h1>
+    <p class="subtitle">Analyze any headline, article, or URL for misinformation</p>
+  </header>
+
+  <div class="main-grid">
+
+    <div class="glass input-panel">
+      <div>
+        <label class="field-label">Article URL &nbsp;(optional)</label>
+        <input type="text" id="urlInput" placeholder="Paste a news article link here..."/>
+      </div>
+      <div>
+        <label class="field-label">News Text</label>
+        <textarea id="textInput" placeholder="Or paste a headline or article text here..."></textarea>
+      </div>
+      <button class="btn-analyze" id="analyzeBtn" onclick="analyze()">
+        <span id="btnText">Analyze</span>
+        <div class="spinner" id="spinner"></div>
+      </button>
+    </div>
+
+    <div class="glass result-panel" id="resultPanel">
+      <div class="empty-state">
+        <div class="empty-icon">◎</div>
+        <p class="empty-text">Awaiting analysis</p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="glass history-panel" id="historyPanel" style="display:none;">
+    <p class="history-heading">── Analysis History ──</p>
+    <div class="history-grid" id="historyGrid"></div>
+  </div>
+
+  <footer>
+    This tool assists human judgment — it does not replace it.<br/>
+    Always verify important news with multiple credible sources.
+  </footer>
+
+</div>
+
+<script>
+async function analyze() {
+  const text = document.getElementById('textInput').value;
+  const url  = document.getElementById('urlInput').value;
+  const btn  = document.getElementById('analyzeBtn');
+  const btnText = document.getElementById('btnText');
+  const spinner = document.getElementById('spinner');
+
+  btn.disabled = true;
+  btnText.style.display = 'none';
+  spinner.style.display = 'block';
+
+  try {
+    const response = await fetch('/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, url })
+    });
+    const data = await response.json();
+    if (data.error) showError(data.error);
+    else showResult(data);
+  } catch(e) {
+    showError('Could not connect to the analysis server.<br/>Make sure detector.py is running.');
+  } finally {
+    btn.disabled = false;
+    btnText.style.display = 'block';
+    spinner.style.display = 'none';
+  }
+}
+
+function colors(verdict) {
+  if (verdict.includes('FAKE'))       return { accent: '#ff5555', glow: 'rgba(255,85,85,0.12)'   };
+  if (verdict.includes('SUSPICIOUS')) return { accent: '#d2a040', glow: 'rgba(210,160,60,0.12)'  };
+  return                                     { accent: '#4dbb7a', glow: 'rgba(77,187,122,0.12)'  };
+}
+
+function icon(verdict) {
+  if (verdict.includes('FAKE'))       return '⚠';
+  if (verdict.includes('SUSPICIOUS')) return '◈';
+  return '✓';
+}
+
+function showResult(data) {
+  const { verdict, confidence, reasons, advice, score, history } = data;
+  const c = colors(verdict);
+  const confW = confidence === 'High' ? 90 : confidence === 'Medium' ? 55 : 25;
+
+  const reasonsHtml = reasons.map(r => `
+    <div class="reason-item">
+      <div class="reason-dot" style="background:${c.accent}"></div>
+      <span>${r}</span>
+    </div>`).join('');
+
+  document.getElementById('resultPanel').innerHTML = `
+    <div class="fade-in">
+
+      <div class="verdict-badge" style="background:${c.glow};border-color:${c.accent}50;">
+        <span class="verdict-icon">${icon(verdict)}</span>
+        <div>
+          <p class="verdict-label" style="color:${c.accent};">Verdict</p>
+          <p class="verdict-text" style="color:${c.accent};">${verdict}</p>
+        </div>
+      </div>
+
+      <p class="section-label">Misinformation Risk Score</p>
+      <div class="score-row">
+        <span style="font-size:13px;color:rgba(210,160,60,0.7);letter-spacing:2px;">0 — 100</span>
+        <span class="score-number" style="color:${c.accent};">${score}/100</span>
+      </div>
+      <div class="bar-track">
+        <div class="bar-fill" id="scoreBar"
+             style="background:linear-gradient(90deg,#4dbb7a,${c.accent});"></div>
+      </div>
+      <div class="bar-markers">
+        <span>Real</span><span>Suspicious</span><span>Fake</span>
+      </div>
+
+      <div class="conf-row">
+        <span class="section-label" style="margin:0;">Confidence</span>
+        <div class="conf-track">
+          <div class="conf-fill" id="confBar" style="background:${c.accent};"></div>
+        </div>
+        <span class="conf-value">${confidence}</span>
+      </div>
+
+      <p class="section-label">Analysis</p>
+      <div class="reasons-list">${reasonsHtml}</div>
+
+      <div class="advice-box">
+        <p class="section-label" style="margin-bottom:10px;">Recommendation</p>
+        <p class="advice-text">${advice}</p>
+      </div>
+
+    </div>`;
+
+  setTimeout(() => {
+    const sb = document.getElementById('scoreBar');
+    const cb = document.getElementById('confBar');
+    if (sb) sb.style.width = score + '%';
+    if (cb) cb.style.width = confW + '%';
+  }, 80);
+
+  updateHistory(history);
+}
+
+function showError(msg) {
+  document.getElementById('resultPanel').innerHTML = `
+    <div class="empty-state fade-in">
+      <p class="error-msg">${msg}</p>
+    </div>`;
+}
+
+function updateHistory(history) {
+  if (!history || !history.length) return;
+  document.getElementById('historyPanel').style.display = 'block';
+  document.getElementById('historyGrid').innerHTML = [...history].reverse().map(e => {
+    const c = colors(e.verdict);
+    return `
+      <div class="history-item" style="border-left-color:${c.accent};">
+        <div class="history-time">${e.time}</div>
+        <div class="history-text">${e.text}</div>
+        <div class="history-verdict" style="color:${c.accent};">${e.verdict} — ${e.score}/100</div>
+      </div>`;
+  }).join('');
+}
+
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') analyze();
+});
+</script>
+</body>
+</html>
