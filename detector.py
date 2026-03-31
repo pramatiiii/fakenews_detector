@@ -129,6 +129,6 @@ ADVICE: [One sentence telling the user what to do]"""
 
 
 if __name__ == '__main__':
-    print("\n✓ Server running! Open this in your browser:")
-    print("  http://127.0.0.1:5000\n")
-    app.run(debug=False, port=5000)
+    port = int(os.environ.get('PORT', 5000))
+    print(f"\n✓ Server running on port {port}\n")
+    app.run(debug=False, host='0.0.0.0', port=port)
