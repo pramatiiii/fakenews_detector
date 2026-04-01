@@ -1,23 +1,26 @@
 # 🔍 AI Fake News Detector
 
-An AI-powered fake news detector with a glassmorphic UI.
+A powerful, AI-driven web application designed to analyze news articles, headlines, and URLs for misinformation. Built with a robust Python/Flask backend and a stunning, interactive glassmorphic frontend, this tool leverages the blazing-fast Groq API and the Llama 3.3 (70B) model to provide deep, structured fact-checking analysis in seconds.
 
-## Tech Stack
-- Python + Flask
-- Groq API (Llama 3.3 70B)
-- HTML / CSS / JavaScript
+## ✨ Key Features
 
-## Setup
-1. Clone this repo
-2. Create and activate a virtual environment
-3. Run `pip install flask groq requests`
-4. Add your Groq API key in `detector.py`
-5. Run `python detector.py`
-6. Open `http://127.0.0.1:5000`
+* **URL & Text Analysis:** Paste a direct link to a news article for automatic text extraction, or paste the raw text/headline directly into the application.
+* **Advanced AI Evaluation:** Powered by Groq and `llama-3.3-70b-versatile`, the app acts as an expert fact-checker to identify red flags, fabricated content, or misleading language.
+* **Structured Insights:** Returns a clear verdict (`LIKELY REAL`, `SUSPICIOUS`, or `LIKELY FAKE`), a confidence metric, bulleted analytical reasons, and actionable advice.
+* **Misinformation Risk Score:** Automatically calculates a risk score (0-100) based on the AI's verdict and confidence level, displayed via animated progress bars.
+* **Premium UI/UX:** Features a responsive, dark-mode "glassmorphism" interface with beautiful typography (Cormorant Garamond & Inter), animated UI states, and color-coded results.
+* **Session History:** Automatically logs and displays your recent analyses during your active session.
 
-## Disclaimer
-<<<<<<< HEAD
-This tool assists human judgment — it does not replace it.
-=======
-This tool assists human judgment — it does not replace it.# fakenews_detector
->>>>>>> 1697b6618fbb5aff20763d3b04554b0067bc9a78
+## 🛠️ Tech Stack
+
+* **Backend:** Python 3, Flask, Requests, Regex
+* **AI Provider:** Groq API (`llama-3.3-70b-versatile`)
+* **Frontend:** HTML5, CSS3, Vanilla JavaScript (Fetch API)
+
+## 📁 Project Structure
+
+```text
+├── detector.py            # Main Flask application, API routing, and AI logic
+├── index.html             # Frontend UI, styling, and client-side scripts
+├── requirements.txt       # Python dependencies
+└── README.md              # Project documentation
